@@ -5,37 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iwata Hiyori | Portfolio</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@200;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@200;300&family=Noto+Sans+JP:wght@100;200;300&family=Courier+Prime:wght@400&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #f5f5f0;
             --text-color: #2c2c2c;
             --accent-blue: #3232c8;
+            --accent-cyan: #00f2ff;
+            --font-lab: 'Courier Prime', 'Inconsolata', monospace;
         }
 
         body, html {
             margin: 0; padding: 0;
             background-color: var(--bg-color);
-            font-family: 'Inconsolata', monospace;
+            font-family: var(--font-lab);
+            font-weight: 200;
             color: var(--text-color);
             overflow-x: hidden;
             scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
         }
 
         canvas#backgroundCanvas { position: fixed; top: 0; left: 0; z-index: -1; }
         .container { position: relative; z-index: 1; width: 100%; }
 
         .hero { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-        .hero h1 { font-size: clamp(2.5rem, 10vw, 5.5rem); font-weight: 200; letter-spacing: 1.2rem; margin: 0; text-transform: uppercase; }
+        .hero .lab-tag { font-size: 0.75rem; letter-spacing: 1.5rem; margin-bottom: 30px; opacity: 0.3; font-weight: 100; }
+        
+        .hero h1 { 
+            font-size: clamp(2.5rem, 10vw, 5.5rem); 
+            font-weight: 100; 
+            letter-spacing: 1.2rem; 
+            margin: 0; 
+            text-transform: uppercase; 
+            line-height: 1;
+            color: rgba(44, 44, 44, 0.7); 
+        }
 
         .nav-links { margin-top: 40px; display: flex; gap: 30px; }
-        .nav-links a { text-decoration: none; color: var(--text-color); font-size: 0.8rem; letter-spacing: 0.2rem; border-bottom: 1px solid transparent; transition: 0.3s; padding-bottom: 5px; }
-        .nav-links a:hover { color: var(--accent-blue); border-bottom: 1px solid var(--accent-blue); }
+        .nav-links a { text-decoration: none; color: var(--text-color); font-size: 0.8rem; letter-spacing: 0.2rem; border-bottom: 1px solid transparent; transition: 0.3s; padding-bottom: 5px; opacity: 0.6; }
+        .nav-links a:hover { color: var(--accent-blue); border-bottom: 1px solid var(--accent-blue); opacity: 1; }
 
         .content-section { padding: 150px 40px; background: linear-gradient(to bottom, transparent, rgba(245, 245, 240, 0.98) 20vh); }
-        .section-header { max-width: 1000px; margin: 0 auto 80px; border-left: 2px solid var(--text-color); padding-left: 20px; }
+        .section-header { max-width: 1000px; margin: 0 auto 80px; border-left: 1px solid rgba(0,0,0,0.2); padding-left: 20px; }
+        .section-header h2 { font-weight: 200; letter-spacing: 0.4em; font-size: 1.1rem; text-transform: uppercase; }
 
-        /* ゲーム紹介カード */
         .game-card-link { text-decoration: none; color: inherit; display: block; max-width: 1000px; margin: 0 auto 100px; }
         .game-card { 
             display: flex; flex-wrap: wrap; align-items: center; gap: 40px; padding: 40px; 
@@ -43,49 +57,112 @@
             border: 1px solid rgba(0,0,0,0.05); transition: 0.4s;
         }
         .game-card:hover { transform: translateY(-10px); border-color: var(--accent-blue); }
-        .game-visual { flex: 1; min-width: 300px; aspect-ratio: 4/3; background: #000; display: flex; align-items: center; justify-content: center; color: #444; font-size: 0.8rem; }
-        .game-info { flex: 1; min-width: 300px; }
+        .game-visual { flex: 1; min-width: 300px; aspect-ratio: 16/9; background: #000; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        .re-thumb { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; transition: 0.5s; filter: grayscale(50%); }
+        .game-card:hover .re-thumb { opacity: 1; filter: grayscale(0%); transform: scale(1.05); }
+        .play-overlay { position: absolute; opacity: 0; transition: 0.3s; z-index: 3; }
+        .game-card:hover .play-overlay { opacity: 1; }
+        .corner-decor { position: absolute; width: 20px; height: 20px; border: 1px solid var(--accent-cyan); z-index: 2; pointer-events: none; }
+        .top-left { top: 15px; left: 15px; border-right: none; border-bottom: none; }
+        .bottom-right { bottom: 15px; right: 15px; border-left: none; border-top: none; }
 
-        /* ギャラリー設定 */
+        .game-info { flex: 1; min-width: 300px; }
+        .game-info p { font-family: 'Noto Sans JP', sans-serif; font-weight: 100; font-size: 0.85rem; line-height: 2.2; color: #555; }
+
         .sketch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 40px; max-width: 1100px; margin: 0 auto; }
         .sketch-item { position: relative; background: #fff; border: 1px solid rgba(0,0,0,0.05); overflow: hidden; transition: transform 0.4s; }
         .sketch-item:hover { transform: translateY(-10px); border-color: var(--accent-blue); }
         .sketch-canvas-container { width: 100%; aspect-ratio: 1/1; cursor: grab; }
         .sketch-info { padding: 20px; border-top: 1px solid rgba(0,0,0,0.05); background: #fff; }
-        .sketch-num { font-size: 0.7rem; opacity: 0.5; display: block; }
-        .sketch-title { font-size: 1rem; font-weight: 400; margin-top: 5px; display: block; }
+        .sketch-num { font-size: 0.65rem; opacity: 0.4; display: block; font-weight: 100; }
+        .sketch-title { font-size: 0.85rem; font-weight: 400; margin-top: 5px; display: block; letter-spacing: 0.1em; }
+
+        #about { margin-top: 100px; }
+        .profile-container { display: flex; flex-wrap: wrap; gap: 60px; max-width: 900px; margin: 0 auto; align-items: flex-start; background: rgba(255,255,255,0.4); padding: 40px; border: 1px solid rgba(0,0,0,0.05); }
+        .profile-image-container { flex: 0 0 240px; height: 320px; border: 1px solid #ddd; background: #fafaf8; overflow: hidden; }
+        .profile-details { flex: 1; min-width: 300px; }
+        .profile-name { font-size: 1.6rem; font-weight: 400; margin: 0 0 10px; letter-spacing: 0.1em; }
+        .profile-title { font-size: 0.75rem; color: var(--accent-blue); margin-bottom: 25px; display: block; letter-spacing: 0.1em; font-weight: 300; }
+        .profile-bio { font-family: 'Noto Sans JP', sans-serif; font-size: 0.8rem; line-height: 2.4; color: #666; font-weight: 100; }
+        .skill-list { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 15px; padding: 0; list-style: none; }
+        .skill-list li { font-size: 0.6rem; border: 1px solid rgba(0,0,0,0.1); padding: 3px 10px; letter-spacing: 0.1em; opacity: 0.6; font-weight: 100; }
+
+        #back-to-top {
+            position: fixed; bottom: 40px; right: 40px; width: 45px; height: 45px;
+            background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.1); color: var(--text-color);
+            display: flex; align-items: center; justify-content: center; text-decoration: none;
+            font-size: 0.55rem; letter-spacing: 0.2em; border-radius: 0; z-index: 100;
+            transition: 0.3s; opacity: 0; pointer-events: none;
+        }
+        #back-to-top.visible { opacity: 1; pointer-events: auto; }
+        #back-to-top:hover { border-color: var(--text-color); transform: translateY(-5px); }
+
+        footer { padding: 100px 5% 40px; text-align: center; font-size: 0.65rem; opacity: 0.3; letter-spacing: 0.4em; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <section class="hero">
+        <section class="hero" id="top">
+            <div class="lab-tag">PORTFOLIO</div>
             <h1>IWATA HIYORI</h1>
             <div class="nav-links">
-                <a href="#featured-game">GAME</a>
+                <a href="#featured-projects">PROJECTS</a>
                 <a href="#sketches">SKETCH ARCHIVE</a>
                 <a href="#about">ABOUT</a>
             </div>
         </section>
 
-        <section id="featured-game" class="content-section">
+        <section id="featured-projects" class="content-section">
             <div class="section-header">
-                <h2>FEATURED GAME</h2>
-                <p style="font-size: 0.8rem; opacity: 0.6;">Pyxel Project: Yesterday's Me, Today's Enemy.</p>
+                <h2>PROJECTS</h2>
+                <p style="font-size: 0.8rem; opacity: 0.6;">Interactive Art</p>
             </div>
             
-            <a href="game.html" class="game-card-link">
+            <a href="https://www.youtube.com/watch?v=cBACVsuh3-k" target="_blank" class="game-card-link">
                 <div class="game-card">
-                    <div class="game-visual">[ PLAY "Re:" ]</div>
+                    <div class="game-visual">
+                        <div class="corner-decor top-left"></div>
+                        <div class="corner-decor bottom-right"></div>
+                        <img src="https://img.youtube.com/vi/cBACVsuh3-k/hqdefault.jpg" alt="Re: Preview" class="re-thumb">
+                        <div class="play-overlay">
+                            <span style="border: 1px solid var(--accent-cyan); color: var(--accent-cyan); padding: 8px 16px; font-size: 0.7rem; background: rgba(0,0,0,0.6); letter-spacing: 0.2em;">WATCH ON YOUTUBE</span>
+                        </div>
+                    </div>
                     <div class="game-info">
-                        <span class="sketch-num" style="color: var(--accent-blue);">#FEATURED</span>
-                        <h2 style="font-weight: 200; font-size: 2.5rem; margin: 10px 0;">Re:</h2>
-                        <p style="font-size: 0.9rem; line-height: 1.8; color: #666;">
-                            「昨日の自分は、今日の敵。」<br>
-                            自機の過去の軌跡がそのまま弾幕となって襲いかかる、自己対峙型アクションゲーム。
+                        <span class="sketch-num" style="color: var(--accent-blue);">#01</span>
+                        <h2 style="font-weight: 200; font-size: 2.2rem; margin: 10px 0;">Re:</h2>
+                        <p>
+                            「yesterday’s me, today’s enemy」<br>
+                            「過去の自分」が最大の敵となって立ちはだかるシューティングゲーム。
+
                         </p>
-                        <div style="margin-top: 20px; font-size: 0.7rem; letter-spacing: 0.2rem; border-bottom: 1px solid var(--accent-blue); display: inline-block;">
-                            LAUNCH GAME PAGE →
+                        <div style="margin-top: 20px; font-size: 0.7rem; letter-spacing: 0.2rem; border-bottom: 1px solid var(--accent-blue); display: inline-block; opacity: 0.6;">
+                            OPEN YOUTUBE →
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://www.youtube.com/watch?v=8UxhvWOFvX8" target="_blank" class="game-card-link">
+                <div class="game-card">
+                    <div class="game-visual">
+                        <div class="corner-decor top-left"></div>
+                        <div class="corner-decor bottom-right"></div>
+                        <img src="https://img.youtube.com/vi/8UxhvWOFvX8/hqdefault.jpg" alt="みらいのくるま Preview" class="re-thumb">
+                        <div class="play-overlay">
+                            <span style="border: 1px solid var(--accent-cyan); color: var(--accent-cyan); padding: 8px 16px; font-size: 0.7rem; background: rgba(0,0,0,0.6); letter-spacing: 0.2em;">WATCH ON YOUTUBE</span>
+                        </div>
+                    </div>
+                    <div class="game-info">
+                        <span class="sketch-num" style="color: var(--accent-blue);">#02</span>
+                        <h2 style="font-weight: 200; font-size: 2.2rem; margin: 10px 0;">みらいのくるま</h2>
+                        <p>
+                            Interactive Installation：みらいのくるま。<br>
+                            ミニカーで描く、次世代の『くるま遊び』
+                        </p>
+                        <div style="margin-top: 20px; font-size: 0.7rem; letter-spacing: 0.2rem; border-bottom: 1px solid var(--accent-blue); display: inline-block; opacity: 0.6;">
+                            OPEN YOUTUBE →
                         </div>
                     </div>
                 </div>
@@ -94,28 +171,49 @@
 
         <main id="sketches" class="content-section">
             <div class="section-header">
-                <h2>CODE SKETCHES</h2>
-                <p style="font-size: 0.8rem; opacity: 0.6;">Generative experiments and interactive geometry.</p>
+                <h2>SKETCH ARCHIVE</h2>
+                <p style="font-size: 0.8rem; opacity: 0.6;">マウスの動きが、表現の一部になります</p>
             </div>
-
             <div class="sketch-grid">
-                <div class="sketch-item">
-                    <div id="canvas-proximity" class="sketch-canvas-container"></div>
-                    <div class="sketch-info"><span class="sketch-num">#001</span><span class="sketch-title">Proximity Rotation</span></div>
-                </div>
-                <div class="sketch-item">
-                    <div id="canvas-torus" class="sketch-canvas-container"></div>
-                    <div class="sketch-info"><span class="sketch-num">#002</span><span class="sketch-title">Metallic Torus 3D</span></div>
-                </div>
+                <div class="sketch-item"><div id="canvas-proximity" class="sketch-canvas-container"></div><div class="sketch-info"><span class="sketch-num">#001</span><span class="sketch-title">Gyrate</span></div></div>
+                <div class="sketch-item"><div id="canvas-torus" class="sketch-canvas-container"></div><div class="sketch-info"><span class="sketch-num">#002</span><span class="sketch-title">Metallic Torus 3D</span></div></div>
+                <div class="sketch-item"><div id="canvas-follow" class="sketch-canvas-container"></div><div class="sketch-info"><span class="sketch-num">#003</span><span class="sketch-title">usagi</span></div></div>
+                <div class="sketch-item"><div id="canvas-bubbles" class="sketch-canvas-container"></div><div class="sketch-info"><span class="sketch-num">#004</span><span class="sketch-title">Sherbet Bubbles</span></div></div>
+                <div class="sketch-item"><div id="canvas-fruit" class="sketch-canvas-container"></div><div class="sketch-info"><span class="sketch-num">#005</span><span class="sketch-title">Fruit Slice</span></div></div>
+                <div class="sketch-item"><div id="canvas-kaleido" class="sketch-canvas-container"></div><div class="sketch-info"><span class="sketch-num">#006</span><span class="sketch-title">Kaleido</span></div></div>
             </div>
         </main>
+
+        <section id="about" class="content-section">
+            <div class="section-header">
+                <h2>ABOUT</h2>
+                <p style="font-size: 0.8rem; opacity: 0.6;">Profile</p>
+            </div>
+            <div class="profile-container">
+                <div id="portrait-canvas-container" class="profile-image-container"></div>
+                <div class="profile-details">
+                    <h3 class="profile-name">岩田 陽理 / Iwata Hiyori</h3>
+                    <span class="profile-title">秋田公立美術大学 コミュニケーションデザイン専攻 3年</span>
+                    <div class="profile-bio">
+                        和歌山県出身。<br>
+                        中学生の頃から寄生虫に興味があり、高校時代は寄生虫探求に没頭。
+                        現在はプログラミングや映像を用いたメディアアートを追求している。
+                        趣味は音楽鑑賞。ASIAN KUNG-FU GENERATIONが好きです。
+                    </div>
+                    <ul class="skill-list">
+                        <li>p5.js</li><li>Pyxel</li><li>TouchDesigner</li><li>Illustrator</li><li>Photoshop</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <a href="#top" id="back-to-top">TOP</a>
+        <footer>&copy; 2026 HIYORI IWATA.</footer>
     </div>
 
     <script>
-        /* 背景・タイル1・タイル2のJavaScriptは po.html の内容をそのまま維持 */
         let particles = [];
-        const num = 1000;
-        const noiseScale = 0.01;
+        const num = 1000; const noiseScale = 0.01;
         function setup() {
             let bgCanvas = createCanvas(windowWidth, windowHeight);
             bgCanvas.id('backgroundCanvas');
@@ -132,17 +230,25 @@
             checkEdges() { if (this.pos.x < 0 || this.pos.x > width || this.pos.y < 0 || this.pos.y > height) { this.pos = createVector(random(width), random(height)); this.prevPos = this.pos.copy(); } }
         }
 
-        const sketch01 = (p) => {
-            p.setup = () => { let c = document.getElementById('canvas-proximity'); p.createCanvas(c.offsetWidth, c.offsetHeight); p.rectMode(p.CENTER); p.noFill(); };
-            p.draw = () => { p.background(255); let cells = 8; let offset = p.width / cells; for (let i = 0; i < cells; i++) { for (let j = 0; j < cells; j++) { let x = i * offset + offset / 2; let y = j * offset + offset / 2; let d = p.dist(p.mouseX, p.mouseY, x, y); let angle = p.map(d, 0, p.width, 0, p.PI * 2); p.push(); p.translate(x, y); p.rotate(angle); p.stroke(50, 50, 200, 200); p.strokeWeight(1.5); p.rect(0, 0, offset * 0.6, offset * 0.6); p.pop(); } } };
-        };
-        new p5(sketch01, 'canvas-proximity');
+        new p5((p) => { p.setup = () => { let c = document.getElementById('canvas-proximity'); p.createCanvas(c.offsetWidth, c.offsetHeight); p.rectMode(p.CENTER); p.noFill(); }; p.draw = () => { p.background(255); let cells = 8; let offset = p.width / cells; for (let i = 0; i < cells; i++) { for (let j = 0; j < cells; j++) { let x = i * offset + offset / 2; let y = j * offset + offset / 2; let d = p.dist(p.mouseX, p.mouseY, x, y); let angle = p.map(d, 0, p.width, 0, p.PI * 2); p.push(); p.translate(x, y); p.rotate(angle); p.stroke(50, 50, 200, 200); p.strokeWeight(1.5); p.rect(0, 0, offset * 0.6, offset * 0.6); p.pop(); } } }; }, 'canvas-proximity');
+        new p5((p) => { p.setup = () => { let c = document.getElementById('canvas-torus'); p.createCanvas(c.offsetWidth, c.offsetHeight, p.WEBGL); }; p.draw = () => { p.background(0); p.orbitControl(); p.pointLight(255, 255, 255, p.mouseX - p.width / 2, p.mouseY - p.height / 2, 100); p.ambientLight(50); p.rotateX(p.frameCount * 0.01); p.rotateY(p.frameCount * 0.01); p.specularMaterial(100, 100, 255); p.shininess(20); p.torus(p.width * 0.25, p.width * 0.08, 64, 64); }; }, 'canvas-torus');
+        new p5((p) => { let x = 0; let y = 0; let easing = 0.1; p.setup = () => { let c = document.getElementById('canvas-follow'); p.createCanvas(c.offsetWidth, c.offsetHeight); p.noStroke(); }; p.draw = () => { p.background(255, 240, 245); let targetX = p.mouseX; let dx = targetX - x; x += dx * easing; let targetY = p.mouseY; let dy = targetY - y; y += dy * easing; p.fill(255, 200, 220); p.ellipse(x, y, 80, 70); p.ellipse(x - 20, y - 35, 20, 30); p.ellipse(x + 20, y - 35, 20, 30); p.fill(50); let eyeOffset = p.map(p.mouseX, 0, p.width, -2, 2); p.ellipse(x - 15 + eyeOffset, y - 5, 8, 8); p.ellipse(x + 15 + eyeOffset, y - 5, 8, 8); p.fill(255, 150, 180, 150); p.ellipse(x - 25, y + 5, 15, 10); p.ellipse(x + 25, y + 5, 15, 10); }; }, 'canvas-follow');
+        new p5((p) => { let bubbles = []; p.setup = () => { let c = document.getElementById('canvas-bubbles'); p.createCanvas(c.offsetWidth, c.offsetHeight); p.noStroke(); }; p.draw = () => { p.background(240, 255, 255, 60); if (p.mouseX !== p.pmouseX || p.mouseY !== p.pmouseY) { if (p.mouseX > 0 && p.mouseX < p.width && p.mouseY > 0 && p.mouseY < p.height) { bubbles.push(new Bubble(p, p.mouseX, p.mouseY)); } } for (let i = bubbles.length - 1; i >= 0; i--) { bubbles[i].update(); bubbles[i].display(); if (bubbles[i].isDead()) { bubbles.splice(i, 1); } } }; class Bubble { constructor(p, x, y) { this.p = p; this.x = x; this.y = y; this.size = p.random(10, 30); this.alpha = 200; this.color = p.color(p.random(['#FFB7C5', '#98FB98', '#87CEFA', '#FFFACD'])); } update() { this.size += 3; this.alpha -= 6; } display() { let p = this.p; p.fill(p.red(this.color), p.green(this.color), p.blue(this.color), this.alpha); p.ellipse(this.x, this.y, this.size); p.fill(255, this.alpha + 20); p.ellipse(this.x, this.y, this.size * 0.6); } isDead() { return this.alpha <= 0; } } }, 'canvas-bubbles');
+        new p5((p) => { let fruits = []; let blade = []; let screenShake = 0; p.setup = () => { let c = document.getElementById('canvas-fruit'); p.createCanvas(c.offsetWidth, c.offsetHeight); p.noStroke(); }; p.draw = () => { let sx = p.random(-screenShake, screenShake); let sy = p.random(-screenShake, screenShake); p.background(253, 245, 230); p.push(); p.translate(sx, sy); drawBlade(); if (p.frameCount % 100 === 0) { fruits.push(new Fruit(p)); } for (let i = fruits.length - 1; i >= 0; i--) { fruits[i].update(); fruits[i].display(); if (!fruits[i].sliced && checkSlice(fruits[i])) { fruits[i].slice(); screenShake = 5; } if (fruits[i].pos.y > p.height + 500) { fruits.splice(i, 1); } } p.pop(); screenShake *= 0.85; }; function drawBlade() { blade.push(p.createVector(p.mouseX, p.mouseY)); if (blade.length > 25) blade.shift(); for (let i = 0; i < blade.length - 1; i++) { let alpha = p.map(i, 0, blade.length, 0, 120); p.stroke(255, alpha); p.strokeWeight(p.map(i, 0, blade.length, 1, 6)); p.line(blade[i].x, blade[i].y, blade[i+1].x, blade[i+1].y); } p.noStroke(); } function checkSlice(f) { if (blade.length < 2) return false; let d = p.dist(p.mouseX, p.mouseY, f.pos.x, f.pos.y); let speed = p.dist(p.mouseX, p.mouseY, p.pmouseX, p.pmouseY); return (d < f.size / 1.3 && speed > 3); } class Fruit { constructor(p) { this.p = p; this.size = p.random(140, 200); this.pos = p.createVector(p.random(this.size, p.width - this.size), p.height + 100); this.vel = p.createVector(p.random(-0.5, 0.5), p.random(-8, -12)); this.gravity = 0.08; this.sliced = false; this.rot = p.random(p.TWO_PI); this.style = p.random([{skin: "#FF6B6B", meat: "#FF8E8E"}, {skin: "#FFA500", meat: "#FFCC80"}, {skin: "#6BCB77", meat: "#C7F2A4"}]); } update() { this.vel.y += this.gravity; this.pos.add(this.vel); this.rot += 0.01; } slice() { this.sliced = true; this.vel.y -= 1; } display() { let p = this.p; p.push(); p.translate(this.pos.x, this.pos.y); p.rotate(this.rot); if (!this.sliced) { p.fill(this.style.skin); p.ellipse(0, 0, this.size); } else { p.fill(this.style.meat); p.arc(0, 0, this.size, this.size, 0, p.PI); } p.pop(); } } }, 'canvas-fruit');
+        new p5((p) => { let colorIndex = 0; let colors = [['#3232c8', '#00f2ff'], ['#FF6B6B', '#FFFACD'], ['#98FB98', '#4D96FF']]; p.setup = () => { let c = document.getElementById('canvas-kaleido'); p.createCanvas(c.offsetWidth, c.offsetHeight); p.angleMode(p.DEGREES); p.noFill(); }; p.draw = () => { p.background(255); p.translate(p.width / 2, p.height / 2); let num = 8; let step = 360 / num; for (let i = 0; i < num; i++) { p.push(); p.rotate(i * step); let x = p.map(p.mouseX, 0, p.width, 0, 100); let y = p.map(p.mouseY, 0, p.height, 0, 100); p.stroke(colors[colorIndex][0]); p.strokeWeight(1.5); p.ellipse(x, y, 40, 40); p.stroke(colors[colorIndex][1]); p.rect(x + 20, y + 20, 30, 30); p.pop(); } }; p.mousePressed = () => { if (p.mouseX > 0 && p.mouseX < p.width && p.mouseY > 0 && p.mouseY < p.height) { colorIndex = (colorIndex + 1) % colors.length; } }; }, 'canvas-kaleido');
 
-        const sketch02 = (p) => {
-            p.setup = () => { let c = document.getElementById('canvas-torus'); p.createCanvas(c.offsetWidth, c.offsetHeight, p.WEBGL); };
-            p.draw = () => { p.background(0); p.orbitControl(); p.pointLight(255, 255, 255, p.mouseX - p.width / 2, p.mouseY - p.height / 2, 100); p.ambientLight(50); p.rotateX(p.frameCount * 0.01); p.rotateY(p.frameCount * 0.01); p.specularMaterial(100, 100, 255); p.shininess(20); p.torus(p.width * 0.25, p.width * 0.08, 64, 64); };
+        new p5((p) => {
+            let img; const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"; const fontSize = 10;
+            p.preload = () => { img = p.loadImage('就職活動証明写真＿0206.jpg'); };
+            p.setup = () => { let c = document.getElementById('portrait-canvas-container'); p.createCanvas(c.offsetWidth, c.offsetHeight); img.resize(p.width, p.height); img.loadPixels(); p.textFont('Courier Prime'); p.textStyle(p.BOLD); p.textSize(fontSize); p.textAlign(p.CENTER, p.CENTER); };
+            p.draw = () => { p.background(250, 250, 248); for (let y = 0; y < p.height; y += fontSize) { for (let x = 0; x < p.width; x += fontSize) { let pix = img.get(x, y); let br = p.brightness(pix); let n = p.noise(x * 0.01, y * 0.01, p.frameCount * 0.02); if (br < 120) { let alpha = p.map(n, 0, 1, 150, 255); let col = p.color(p.red(pix), p.green(pix), p.blue(pix), alpha); p.fill(col); p.stroke(col); p.strokeWeight(0.8); p.push(); p.translate(x + (n-0.5)*3, y + (n-0.5)*3); p.text(chars.charAt(p.floor(p.map(br, 0, 120, 0, chars.length))), 0, 0); p.pop(); } else if (br < 220) { p.stroke(p.red(pix), p.green(pix), p.blue(pix), 60); p.strokeWeight(n * 2.5); p.noFill(); p.line(x-1.5, y, x+1.5, y); p.line(x, y-1.5, x, y+1.5); } } } };
+        }, 'portrait-canvas-container');
+
+        const btn = document.getElementById('back-to-top');
+        window.onscroll = () => {
+            if (window.pageYOffset > 500) btn.classList.add('visible');
+            else btn.classList.remove('visible');
         };
-        new p5(sketch02, 'canvas-torus');
 
         window.onload = () => { for (let i = 0; i < num; i++) particles.push(new Particle()); };
         function windowResized() { resizeCanvas(windowWidth, windowHeight); background(245, 245, 240); }
